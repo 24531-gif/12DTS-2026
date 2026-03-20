@@ -29,6 +29,9 @@ game_map = {
 
 while True:
     room_data = game_map[current_room]
-    print ({room_data['description']})
+    print ({room_data["description"])
 
-    player_command = input("Please enter a command.")
+    if "item" in room_data:
+        print (f"You see a {room_data['item']} here.")
+
+    player_command = input("What would you like to do? Type 'help' for commands.")
