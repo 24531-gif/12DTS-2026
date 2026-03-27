@@ -26,10 +26,24 @@ game_map = {
     "Vault": {
         "description": "A locked vault door bars your way.",
         "west": "Foyer",
-        "locked": True,
+        "locked": True,  # This is correct because True is a boolean
         "item": "Ink-Stained Book",
     },
 }
+
+
+# --- Functions ---
+
+def start_menu():
+    print("--------------------------------------")
+    print("-- Welcome to the Library of Babel. --")
+    print("--------------------------------------")
+    print("Navigate the infinite shelves.")
+    print("Uncover the ultimate truth.")
+    print("Find the Golden Quill to unlock the vault.")
+    print("--------------------------------------")
+    input ("PRESS ANY BUTTON TO BEGIN")
+    print ("Your adventure has begun...")
 
 # --- Item Effects ---
 def use_item(item):
@@ -95,8 +109,13 @@ def encounter_enemy():
         print("You defeated the Librarian!")
 
 # --- Game Loop ---
+
+start_menu()
+
 while game_running:
+
     room_data = game_map[current_room]
+
 
     print("\n" + room_data["description"])
     print(f"Health: {player_health}")
@@ -174,5 +193,10 @@ while game_running:
         break
 
     if current_room == "Vault" and "Golden Quill" in player_inventory:
-        print("You unlock the ultimate truth of the Library. You win!")
+        print("You unlock the ultimate truth of the Library - the real treasure was the friends you made along the way.")
+        print ("You win!")
         break
+
+
+
+
