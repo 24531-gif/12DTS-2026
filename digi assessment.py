@@ -20,22 +20,34 @@ game_map = {
     "Foyer": {
         "description": "The golden-lit centre. The Golden Quill rests on a pedestal.",
         "south": "Entrance",
-        "east": "Vault",
+        "east": "Puzzle Room",
         "item": "Golden Quill",
     },
     "Vault": {
         "description": "A locked vault door bars your way.",
-        "west": "Foyer",
+        "south": "Puzzle Room",
         "locked": True,
         "item": "Ink-Stained Book",
     },
-
+    "Puzzle Room": {
+        "description": "Runes glow on the walls of the Puzzle Room. A riddle blocks your path.",
+        "west": "Foyer",
+        "north": "Vault",
+        "puzzle": True
+    }
 }
 
 
 # --- Functions ---
 
-def start_menu():
+def get_valid_input(prompt, valid_options): # Ensures the user's input is valid and prevents unwanted crashes
+    while True:
+        choice = input(prompt).lower().strip()
+        if choice in valid_options:
+            return choice
+        print ("Invalid input. Please try again.")
+
+def start_menu(): # Displays Start Menu and Instructions
     print("--------------------------------------")
     print("-- Welcome to the Library of Babel. --")
     print("--------------------------------------")
@@ -45,6 +57,12 @@ def start_menu():
     print("--------------------------------------")
     input("PRESS 'ENTER' TO BEGIN")
     print("Your adventure has begun...")
+
+def restart_game():
+    global player_health, player_inventory, current_room
+    player_health = STARTING_HEALTH
+    player_inventory = []
+    current_room = "Entrance"
 
 # --- Item Effects ---
 def use_item(item):
@@ -63,6 +81,23 @@ def use_item(item):
 
     else:
         print("Nothing happens.")
+
+
+
+# --- Puzzle System ---
+
+def solve_riddle():
+    print ("A voice whispers to you in your mind...")
+    print ("I get wetter as you get drier. What am I?")
+    answer = input("Your answer:").lower().strip()  # Makes sure multiple possible inputs are all valid
+
+    if answer == "towel":
+        print ("Correct. The path opens.")
+        return True
+    else:
+        print ("Incorrect. The walls are sealed.")
+        return False
+
 
 # --- Random Events ---
 def random_event():
@@ -124,17 +159,24 @@ while game_running:
     print(f"Health: {player_health}")
 
     # Random chance of encounter
-    if random.random() < 0.1:
+    if random.random() < 0.2:
         encounter_enemy()
 
     # Random world event
     if random.random() < 0.1:
         random_event()
 
+    if "puzzle" in room_data:
+        if not solve_riddle():
+            continue
+        else:
+            del room_data["puzzle"]
+
     if "item" in room_data:
         print(f"You see a {room_data['item']} here.")
 
-    command = input("> ").lower()
+    command = get_valid_input("> ",
+                    ["north", "south", "east", "west", "take", "use", "inventory", "help", "quit"])
 
     if command == "help":
         print("Commands: north, south, east, west, take, use, inventory, quit")
@@ -193,12 +235,20 @@ while game_running:
     # --- Win/Lose Conditions ---
     if player_health <= 0:
         print("You collapse among the endless books... Game Over.")
-        break
+        choice = get_valid_input("Restart? (Yes/No): ", ["yes", "no"])
+        if choice == "yes":
+            continue
+        else:
+            break
 
     if current_room == "Vault" and "Golden Quill" in player_inventory:
         print("You unlock the ultimate truth of the Library - the real treasure was the friends you made along the way.")
         print ("You win!")
-        break
+        choice = get_valid_input("Play agan? (Yes/No): ", ["yes", "no"])
+        if choice == "yes":
+            continue
+        else:
+            break
 
 
 
