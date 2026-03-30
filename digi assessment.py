@@ -26,9 +26,10 @@ game_map = {
     "Vault": {
         "description": "A locked vault door bars your way.",
         "west": "Foyer",
-        "locked": True,  # This is correct because True is a boolean
+        "locked": True,
         "item": "Ink-Stained Book",
     },
+
 }
 
 
@@ -42,8 +43,8 @@ def start_menu():
     print("Uncover the ultimate truth.")
     print("Find the Golden Quill to unlock the vault.")
     print("--------------------------------------")
-    input ("PRESS ANY BUTTON TO BEGIN")
-    print ("Your adventure has begun...")
+    input("PRESS 'ENTER' TO BEGIN")
+    print("Your adventure has begun...")
 
 # --- Item Effects ---
 def use_item(item):
@@ -54,11 +55,11 @@ def use_item(item):
         print("You feel restored. (+30 HP)")
 
     elif item == "Ink-Stained Book":
-        print("The book whispers forbidden truths... You feel weaker.")
+        print("The book whispers forbidden truths... You feel weaker. (-10 HP)")
         player_health -= 10
 
     elif item == "Golden Quill":
-        print("The Quill hums with power. You feel destined.")
+        print("The Quill hums with power. Use it to unlock the Vault.")
 
     else:
         print("Nothing happens.")
@@ -70,12 +71,14 @@ def random_event():
     event_roll = random.randint(1, 4)
 
     if event_roll == 1:
-        print("A cursed sentence rearranges itself in your mind...")
+        print("A cursed sentence rearranges itself in your mind... (-5 HP)")
         player_health -= 5
+        print ("Hint: You can use the 'use' command to use items you have picked up.")
 
     elif event_roll == 2:
         print("You find a helpful note scribbled in the margins. (+5 HP)")
         player_health += 5
+        print("Hint: You can use the 'help' command to see all player commands.")
 
 # --- Combat ---
 def encounter_enemy():
@@ -121,11 +124,11 @@ while game_running:
     print(f"Health: {player_health}")
 
     # Random chance of encounter
-    if random.random() < 0.3:
+    if random.random() < 0.1:
         encounter_enemy()
 
     # Random world event
-    if random.random() < 0.3:
+    if random.random() < 0.1:
         random_event()
 
     if "item" in room_data:
