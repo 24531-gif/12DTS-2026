@@ -3,23 +3,28 @@ import random
 # --- Constants ---
 STARTING_HEALTH = 100
 INVENTORY_SIZE = 5
+STARTING_GOLD = 20
 
 # --- Variables ---
 player_health = STARTING_HEALTH
 player_inventory = []
 current_room = "Entrance"
 game_running = True
+player_gold = STARTING_GOLD
+puzzles_solved = 0
 
 # --- Map ---
 game_map = {
     "Entrance": {
-        "description": "You stand before the infinite Library of Babel. Knowledge and madness await.",
+        "description": "You stand before the infinite Library of Babel. Every book written, possible or impossible, exists here.",
         "north": "Foyer",
         "item": "Blessed Inkwell",
     },
     "Foyer": {
         "description": "The golden-lit centre. The Golden Quill rests on a pedestal.",
         "south": "Entrance",
+        "north": "Cipher Room",
+        "west": "Shop",
         "east": "Puzzle Room",
         "item": "Golden Quill",
     },
@@ -34,6 +39,15 @@ game_map = {
         "west": "Foyer",
         "north": "Vault",
         "puzzle": True
+    },
+    "Shop": {
+        "description": "A quiet librarian watches you. Knowledge has a price."
+        "east": "Foyer"
+    },
+    "Cipher Room": {
+        "description": "A strange looking book lies open. The letters are scrambled."
+        "south": "Foyer",
+        "cipher": True
     }
 }
 
@@ -48,21 +62,51 @@ def get_valid_input(prompt, valid_options): # Ensures the user's input is valid 
         print ("Invalid input. Please try again.")
 
 def start_menu(): # Displays Start Menu and Instructions
-    print("--------------------------------------")
-    print("-- Welcome to the Library of Babel. --")
-    print("--------------------------------------")
-    print("Navigate the infinite shelves.")
-    print("Uncover the ultimate truth.")
-    print("Find the Golden Quill to unlock the vault.")
-    print("--------------------------------------")
-    input("PRESS 'ENTER' TO BEGIN")
-    print("Your adventure has begun...")
+    print ("--------------------------------------")
+    print ("-- Welcome to the Library of Babel. --")
+    print ("--------------------------------------")
+    print ("Navigate the infinite shelves.")
+    print ("Uncover the ultimate truth.")
+    print ("Find the Golden Quill to unlock the vault.")
+    print ("--------------------------------------")
+    input ("PRESS 'ENTER' TO BEGIN.)
+    print ("Your adventure has begun...")
+    print ("Hint: type 'help' for a list of all player commands.")
 
 def restart_game():
     global player_health, player_inventory, current_room
     player_health = STARTING_HEALTH
     player_inventory = []
     current_room = "Entrance"
+    player_gold = STARTING_GOLD
+    puzzles_solved = 0
+
+# --- Shop System ---
+
+def shop():
+    global player_gold, player_health
+
+    print (f"\nGold: {player_gold}")
+    print ("1. Healing Scroll (+20 HP) - 10 gold")
+    print ("2. Lucky Charm (damage reduction) - 15 gold")
+    print ("3. Exit shop")
+
+    choice = get_valid_input("Choose: ", ["1", "2", "3"])
+
+    if choice == "1" and player_gold >= 10:
+        player_gold -= 10
+        player_health += 20
+        print ("The healing scroll restores your health.")
+    elif choice == "2" and player_gold >= 15:
+        player_gold -= 15
+        print ("The lucky charm protects you from damage.")
+    elif choice == "3":
+        return
+    else:
+        print ("You don't have enough gold.")
+
+
+
 
 # --- Item Effects ---
 def use_item(item):
@@ -93,12 +137,27 @@ def solve_riddle():
 
     if answer == "towel":
         print ("Correct. The path opens.")
+        puzzles_solved += 1
         return True
     else:
         print ("Incorrect. The walls are sealed.")
         return False
 
+def solve_cipher():
+    print ("You pull out a book at random and discover a random string of letters.")
+    print ("It seems to mean something...")
+    print ("The text reads: 'Uifsf jt op tqppo.")
+    print ("Try decoding it. (Hint: shift each letter backwards by 1)")
 
+    answer = input ("Decoded message:").strip().lower()
+
+    if answer == "there is no spoon":
+        print ("The book rearranges itself. What a meaningless phrase.")
+        puzzles_solved += 1
+        return True
+    else:
+        print ("Incorrect. The book stays jumbled.")
+        return False
 # --- Random Events ---
 def random_event():
     global player_health
@@ -144,7 +203,8 @@ def encounter_enemy():
     if player_health <= 0:
         print("You were defeated by the Librarian...")
     else:
-        print("You defeated the Librarian!")
+        print("You defeated the Librarian! (+5 gold)")
+        player_gold += 5
 
 # --- Game Loop ---
 
@@ -171,15 +231,21 @@ while game_running:
             continue
         else:
             del room_data["puzzle"]
+    if "cipher" in room_data:
+        if not solve_cipher():
+            continue
+        else:
+            del room_data["cipher"]
+
 
     if "item" in room_data:
         print(f"You see a {room_data['item']} here.")
 
     command = get_valid_input("> ",
-                    ["north", "south", "east", "west", "take", "use", "inventory", "help", "quit"])
+                    ["north", "south", "east", "west", "take", "use", "inventory", "help", "quit", "shop"])
 
     if command == "help":
-        print("Commands: north, south, east, west, take, use, inventory, quit")
+        print("Commands: north, south, east, west, take, use, inventory, quit", "shop")
 
     elif command in ["north", "south", "east", "west"]:
         if command in room_data:
@@ -232,6 +298,11 @@ while game_running:
     else:
         print("Invalid command.")
 
+elif command == "shop":
+    if current_room == "Shop":
+        shop()
+    else:
+        print ("You must be in the shop.")
     # --- Win/Lose Conditions ---
     if player_health <= 0:
         print("You collapse among the endless books... Game Over.")
