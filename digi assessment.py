@@ -109,8 +109,10 @@ def shop():
         for i, item in enumerate(SHOP_ITEMS):
             typewriter_print(f"{i+1}. {item['name']} - {item['cost']} gold")
 
+        # Option to exit the shop
         typewriter_print(f"{len(SHOP_ITEMS)+1}. Exit")
 
+        # Get player choice
         valid_choices = [str(i+1) for i in range(len(SHOP_ITEMS)+1)]
         choice = get_valid_input("Choose: ", valid_choices)
 
@@ -134,7 +136,7 @@ def shop():
 
         else:
             typewriter_print("Not enough gold.")
-
+            
 # Handles the effect of using items in the inventory
 def use_item(item):
     global player_health
@@ -150,8 +152,7 @@ def use_item(item):
     elif item == "Golden Quill":
         typewriter_print("The Quill hums with power. Use it to unlock the Vault.")
 
-    else:
-        typewriter_print("Nothing happens.")
+    
 
 # --- Puzzle System ---
 
@@ -209,7 +210,7 @@ def encounter_enemy():
     while enemy_health > 0 and player_health > 0:
         action = input("Fight or run? ").lower()
 
-        if action == "fight":
+        if "fight" in action:
             damage = random.randint(5, 15)
             enemy_health -= damage
             typewriter_print(f"You deal {damage} damage.")
@@ -219,7 +220,7 @@ def encounter_enemy():
                 player_health -= enemy_damage
                 typewriter_print(f"The Librarian hits you for {enemy_damage}!")
 
-        elif action == "run":
+        elif "run" in action:
             typewriter_print("You escape!")
             return
         else:
@@ -233,6 +234,7 @@ def encounter_enemy():
 
 # --- Game Loop ---
 start_menu()  # Display intro
+game_won = False  # Flag to prevent multiple win prints
 
 while game_running:
     room_data = game_map[current_room]
@@ -243,6 +245,8 @@ while game_running:
     # Random chance of combat
     if random.random() < 0.2:
         encounter_enemy()
+        if player_health <= 0:
+            continue  # Skip rest of loop if player died in combat
 
     # Random world event
     if random.random() < 0.1:
@@ -303,17 +307,27 @@ while game_running:
     elif command == "use":
         if player_inventory:
             typewriter_print(f"Inventory: {player_inventory}")
-            item = input("Which item? ").strip().lower()
-            if item in player_inventory:
-                use_item(item)
-                player_inventory.remove(item)
+            item_input = input("Which item? ").strip().lower()
+
+            matched_item = None
+            for inv_item in player_inventory:
+                if item_input == inv_item.lower():
+                    matched_item = inv_item
+                    break
+
+            if matched_item:
+                use_item(matched_item)
+                player_inventory.remove(matched_item)
             else:
                 typewriter_print("You don't have that.")
         else:
             typewriter_print("Inventory is empty.")
 
     elif command == "inventory":
-        typewriter_print("Inventory:", player_inventory if player_inventory else "Empty")
+        if player_inventory:
+            typewriter_print("Inventory: " + ", ".join(player_inventory))
+        else:
+            typewriter_print("Inventory: Empty")
 
     elif command == "quit":
         typewriter_print("Goodbye.")
@@ -323,27 +337,30 @@ while game_running:
         if current_room == "Shop":
             shop()
         else:
-            typewriter_print ("You must be in the shop.")
+            typewriter_print("You must be in the shop.")
 
     else:
         typewriter_print("Invalid command.")
-        
+
     # --- Win/Lose Conditions ---
     if player_health <= 0:
         typewriter_print("You collapse among the endless books... Game Over.")
         choice = get_valid_input("Restart? (Yes/No): ", ["yes", "no"])
         if choice == "yes":
             restart_game()
+            game_won = False
             continue
         else:
             break
 
-    if current_room == "Vault" and "Golden Quill" in player_inventory and puzzles_solved == 2:
+    if current_room == "Vault" and "Golden Quill" in player_inventory and puzzles_solved == 2 and not game_won:
         typewriter_print("You unlock the ultimate truth of the Library - the real treasure was the friends you made along the way.")
-        typewriter_print ("You win!")
+        typewriter_print("You win!")
+        game_won = True
         choice = get_valid_input("Play again? (Yes/No): ", ["yes", "no"])
         if choice == "yes":
             restart_game()
+            game_won = False
             continue
         else:
             break
