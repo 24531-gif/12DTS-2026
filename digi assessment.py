@@ -1,9 +1,16 @@
 import random
+import time
+import sys
+
 
 # --- Constants ---
 STARTING_HEALTH = 100
 INVENTORY_SIZE = 5
 STARTING_GOLD = 20
+SHOP_ITEMS = [
+    {"name": "Healing Scroll", "cost": 10, "type": "heal", "value": 20},
+    {"name": "Lucky Charm", "cost": 15, "type": "buff", "value": 10},
+]
 
 # --- Variables ---
 player_health = STARTING_HEALTH
@@ -12,6 +19,7 @@ current_room = "Entrance"
 game_running = True
 player_gold = STARTING_GOLD
 puzzles_solved = 0
+player_defence = 0
 
 # --- Map ---
 game_map = {
@@ -24,7 +32,7 @@ game_map = {
         "description": "The golden-lit centre. The Golden Quill rests on a pedestal.",
         "south": "Entrance",
         "north": "Cipher Room",
-        "west": "Shop",
+        "west": "Shop", 
         "east": "Puzzle Room",
         "item": "Golden Quill",
     },
@@ -41,11 +49,11 @@ game_map = {
         "puzzle": True
     },
     "Shop": {
-        "description": "A quiet librarian watches you. Knowledge has a price."
+        "description": "A quiet librarian watches you. Knowledge has a price.",
         "east": "Foyer"
     },
     "Cipher Room": {
-        "description": "A strange looking book lies open. The letters are scrambled."
+        "description": "A strange looking book lies open. The letters are scrambled.",
         "south": "Foyer",
         "cipher": True
     }
@@ -54,6 +62,14 @@ game_map = {
 
 # --- Functions ---
 
+def typewriter_print(text): # Aesthetic typewriter function
+    for character in text:
+        sys.stdout.write(character)
+        sys.stdout.flush()
+        time.sleep(.01)
+    print() # Adds a new line
+
+
 def get_valid_input(prompt, valid_options): # Ensures the user's input is valid and prevents unwanted crashes
     while True:
         choice = input(prompt).lower().strip()
@@ -61,125 +77,140 @@ def get_valid_input(prompt, valid_options): # Ensures the user's input is valid 
             return choice
         print ("Invalid input. Please try again.")
 
+
 def start_menu(): # Displays Start Menu and Instructions
-    print ("--------------------------------------")
-    print ("-- Welcome to the Library of Babel. --")
-    print ("--------------------------------------")
-    print ("Navigate the infinite shelves.")
-    print ("Uncover the ultimate truth.")
-    print ("Find the Golden Quill to unlock the vault.")
-    print ("--------------------------------------")
-    input ("PRESS 'ENTER' TO BEGIN.)
-    print ("Your adventure has begun...")
-    print ("Hint: type 'help' for a list of all player commands.")
+    typewriter_print ("--------------------------------------")
+    typewriter_print ("-- Welcome to the Library of Babel. --")
+    typewriter_print ("--------------------------------------")
+    typewriter_print ("Navigate the infinite shelves.")
+    typewriter_print ("Uncover the ultimate truth.")
+    typewriter_print ("Find the Golden Quill to unlock the vault.")
+    typewriter_print ("--------------------------------------")
+    typewriter_print ("Your adventure has begun...")
+    typewriter_print ("Hint: type 'help' for a list of all player commands.")
+
 
 def restart_game():
-    global player_health, player_inventory, current_room
+    global player_health, player_inventory, current_room, player_gold, puzzles_solved
     player_health = STARTING_HEALTH
     player_inventory = []
     current_room = "Entrance"
     player_gold = STARTING_GOLD
     puzzles_solved = 0
 
+
 # --- Shop System ---
+
 
 def shop():
     global player_gold, player_health
 
-    print (f"\nGold: {player_gold}")
-    print ("1. Healing Scroll (+20 HP) - 10 gold")
-    print ("2. Lucky Charm (damage reduction) - 15 gold")
-    print ("3. Exit shop")
+    while True:
+        typewriter_print(f"\nGold: {player_gold}")
 
-    choice = get_valid_input("Choose: ", ["1", "2", "3"])
+        for i, item in enumerate(SHOP_ITEMS):
+            typewriter_print(f"{i+1}. {item['name']} - {item['cost']} gold")
 
-    if choice == "1" and player_gold >= 10:
-        player_gold -= 10
-        player_health += 20
-        print ("The healing scroll restores your health.")
-    elif choice == "2" and player_gold >= 15:
-        player_gold -= 15
-        print ("The lucky charm protects you from damage.")
-    elif choice == "3":
-        return
-    else:
-        print ("You don't have enough gold.")
+        typewriter_print(f"{len(SHOP_ITEMS)+1}. Exit")
 
+        valid_choices = [str(i+1) for i in range(len(SHOP_ITEMS)+1)]
+        choice = get_valid_input("Choose: ", valid_choices)
 
+        if choice == str(len(SHOP_ITEMS)+1):
+            return
+
+        item = SHOP_ITEMS[int(choice)-1]
+
+        if player_gold >= item["cost"]:
+            player_gold -= item["cost"]
+
+            if item["type"] == "heal":
+                player_health += item["value"]
+                typewriter_print(f"You gained {item['value']} HP.")
+
+            elif item["type"] == "buff":
+                player_defence += item["value"]
+                typewriter_print("You feel protected.")
+
+        else:
+            typewriter_print("Not enough gold.")
 
 
 # --- Item Effects ---
+
 def use_item(item):
     global player_health
 
     if item == "Blessed Inkwell":
         player_health = min(STARTING_HEALTH, player_health + 30)
-        print("You feel restored. (+30 HP)")
+        typewriter_print("You feel restored. (+30 HP)")
 
     elif item == "Ink-Stained Book":
-        print("The book whispers forbidden truths... You feel weaker. (-10 HP)")
+        typewriter_print("The book whispers forbidden truths... You feel weaker. (-10 HP)")
         player_health -= 10
 
     elif item == "Golden Quill":
-        print("The Quill hums with power. Use it to unlock the Vault.")
+        typewriter_print("The Quill hums with power. Use it to unlock the Vault.")
 
     else:
-        print("Nothing happens.")
+        typewriter_print("Nothing happens.")
 
 
 
 # --- Puzzle System ---
 
 def solve_riddle():
-    print ("A voice whispers to you in your mind...")
-    print ("I get wetter as you get drier. What am I?")
-    answer = input("Your answer:").lower().strip()  # Makes sure multiple possible inputs are all valid
+    global puzzles_solved
+
+    answer = input("I get wetter as you get drier: ").lower().strip()
 
     if answer == "towel":
-        print ("Correct. The path opens.")
         puzzles_solved += 1
+        typewriter_print ("Correct. The path opens.")
         return True
     else:
-        print ("Incorrect. The walls are sealed.")
+        typewriter_print ("Incorrect.")
         return False
+
+
 
 def solve_cipher():
-    print ("You pull out a book at random and discover a random string of letters.")
-    print ("It seems to mean something...")
-    print ("The text reads: 'Uifsf jt op tqppo.")
-    print ("Try decoding it. (Hint: shift each letter backwards by 1)")
+    global puzzles_solved
 
-    answer = input ("Decoded message:").strip().lower()
+    answer = input("Decode: Uifsf jt op tqppo: ").lower().strip()
 
     if answer == "there is no spoon":
-        print ("The book rearranges itself. What a meaningless phrase.")
         puzzles_solved += 1
+        typewriter_print ("Correct. The book rearranges itself.")
         return True
     else:
-        print ("Incorrect. The book stays jumbled.")
+        typewriter_print ("Incorrect. The book stays jumbled.")
         return False
+    
 # --- Random Events ---
+
 def random_event():
     global player_health
 
     event_roll = random.randint(1, 4)
 
     if event_roll == 1:
-        print("A cursed sentence rearranges itself in your mind... (-5 HP)")
+        typewriter_print("A cursed sentence rearranges itself in your mind... (-5 HP)")
         player_health -= 5
-        print ("Hint: You can use the 'use' command to use items you have picked up.")
+        typewriter_print ("Hint: You can use the 'use' command to use items you have picked up.")
 
     elif event_roll == 2:
-        print("You find a helpful note scribbled in the margins. (+5 HP)")
+        typewriter_print("You find a helpful note scribbled in the margins. (+5 HP)")
         player_health += 5
-        print("Hint: You can use the 'help' command to see all player commands.")
+        typewriter_print("Hint: You can use the 'help' command to see all player commands.")
 
 # --- Combat ---
+
 def encounter_enemy():
-    global player_health
+    global player_health, player_gold
 
     enemy_health = 20
-    print("A hostile Librarian appears!")
+    typewriter_print("A hostile Librarian appears!")
 
     while enemy_health > 0 and player_health > 0:
         action = input("Fight or run? ").lower()
@@ -187,23 +218,23 @@ def encounter_enemy():
         if action == "fight":
             damage = random.randint(5, 15)
             enemy_health -= damage
-            print(f"You deal {damage} damage.")
+            typewriter_print(f"You deal {damage} damage.")
 
             if enemy_health > 0:
-                enemy_damage = random.randint(5, 10)
+                enemy_damage = max(0, random.randint(5, 10) - player_defence)
                 player_health -= enemy_damage
-                print(f"The Librarian hits you for {enemy_damage}!")
+                typewriter_print(f"The Librarian hits you for {enemy_damage}!")
 
         elif action == "run":
-            print("You escape!")
+            typewriter_print("You escape!")
             return
         else:
-            print("Invalid action.")
+            typewriter_print("Invalid action.")
 
     if player_health <= 0:
-        print("You were defeated by the Librarian...")
+        typewriter_print("You were defeated by the Librarian...")
     else:
-        print("You defeated the Librarian! (+5 gold)")
+        typewriter_print("You defeated the Librarian! (+5 gold)")
         player_gold += 5
 
 # --- Game Loop ---
@@ -215,8 +246,8 @@ while game_running:
     room_data = game_map[current_room]
 
 
-    print("\n" + room_data["description"])
-    print(f"Health: {player_health}")
+    typewriter_print("\n" + room_data["description"])
+    typewriter_print(f"Health: {player_health}")
 
     # Random chance of encounter
     if random.random() < 0.2:
@@ -239,13 +270,13 @@ while game_running:
 
 
     if "item" in room_data:
-        print(f"You see a {room_data['item']} here.")
+        typewriter_print(f"You see a {room_data['item']} here.")
 
     command = get_valid_input("> ",
                     ["north", "south", "east", "west", "take", "use", "inventory", "help", "quit", "shop"])
 
     if command == "help":
-        print("Commands: north, south, east, west, take, use, inventory, quit", "shop")
+        typewriter_print("Commands: north, south, east, west, take, use, inventory, quit, shop")
 
     elif command in ["north", "south", "east", "west"]:
         if command in room_data:
@@ -254,73 +285,73 @@ while game_running:
             # Check lock
             if "locked" in game_map[next_room] and game_map[next_room]["locked"]:
                 if "Golden Quill" in player_inventory:
-                    print("The Quill unlocks the Vault!")
+                    typewriter_print("The Quill unlocks the Vault!")
                     game_map[next_room]["locked"] = False
                 else:
-                    print("The door is locked.")
+                    typewriter_print("The door is locked.")
                     continue
 
             current_room = next_room
         else:
-            print("You can't go that way.")
+            typewriter_print("You can't go that way.")
 
     elif command == "take":
         if "item" in room_data:
             if len(player_inventory) < INVENTORY_SIZE:
                 item = room_data["item"]
                 player_inventory.append(item)
-                print(f"You picked up the {item}.")
+                typewriter_print(f"You picked up the {item}.")
                 del room_data["item"]
             else:
-                print("Inventory full.")
+                typewriter_print("Inventory full.")
         else:
-            print("Nothing here.")
+            typewriter_print("Nothing here.")
 
     elif command == "use":
         if player_inventory:
-            print("Inventory:", player_inventory)
+            typewriter_print(f"Inventory: {player_inventory}")
             item = input("Which item? ")
             if item in player_inventory:
                 use_item(item)
                 player_inventory.remove(item)
             else:
-                print("You don't have that.")
+                typewriter_print("You don't have that.")
         else:
-            print("Inventory is empty.")
+            typewriter_print("Inventory is empty.")
 
     elif command == "inventory":
-        print("Inventory:", player_inventory if player_inventory else "Empty")
+        typewriter_print("Inventory:", player_inventory if player_inventory else "Empty")
 
     elif command == "quit":
-        print("Goodbye.")
+        typewriter_print("Goodbye.")
         break
 
-    else:
-        print("Invalid command.")
+    elif command == "shop":
+        if current_room == "Shop":
+            shop()
+        else:
+            typewriter_print ("You must be in the shop.")
 
-elif command == "shop":
-    if current_room == "Shop":
-        shop()
     else:
-        print ("You must be in the shop.")
+        typewriter_print("Invalid command.")
+        
     # --- Win/Lose Conditions ---
+    
     if player_health <= 0:
-        print("You collapse among the endless books... Game Over.")
+        typewriter_print("You collapse among the endless books... Game Over.")
         choice = get_valid_input("Restart? (Yes/No): ", ["yes", "no"])
         if choice == "yes":
+            restart_game()
             continue
         else:
             break
 
-    if current_room == "Vault" and "Golden Quill" in player_inventory:
-        print("You unlock the ultimate truth of the Library - the real treasure was the friends you made along the way.")
-        print ("You win!")
-        choice = get_valid_input("Play agan? (Yes/No): ", ["yes", "no"])
+    if current_room == "Vault" and "Golden Quill" in player_inventory and puzzles_solved == 2:
+        typewriter_print("You unlock the ultimate truth of the Library - the real treasure was the friends you made along the way.")
+        typewriter_print ("You win!")
+        choice = get_valid_input("Play again? (Yes/No): ", ["yes", "no"])
         if choice == "yes":
+            restart_game()
             continue
         else:
             break
-
-
-
-
